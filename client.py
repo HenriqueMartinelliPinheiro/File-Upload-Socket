@@ -2,40 +2,36 @@ import socket
 import os
 import time 
 
-def send_file(server_ip, server_port, file_path):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((server_ip, server_port))
+def enviarArquivo(ipServer, portaServer, caminhoArquivo):
+    cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # cria o socket 
+    cliente.connect((ipServer, portaServer)) # inicia a conexão com o servidor
 
-    file_name = os.path.basename(file_path)
-    file_size = os.path.getsize(file_path)
+    nomeArquivo = os.path.basename(caminhoArquivo) 
+    tamanhoArquivo = os.path.getsize(caminhoArquivo)
 
-    # Enviando o nome do arquivo
-    client.send(file_name.encode())
-
-    # Adicionando um pequeno atraso para garantir que o servidor receba o nome do arquivo
-    time.sleep(0.1)  # Adicione esta linha
-
-    # Enviando o tamanho do arquivo
-    client.send(str(file_size).encode())
+    # envia o nome e tamanho do arquivo
+    cliente.send(nomeArquivo.encode())
+    time.sleep(0.1)  # espera para o servidor poder receber o nome do arquivo
+    cliente.send(str(tamanhoArquivo).encode()) # envia o arquivo
 
     # Enviando o arquivo
-    with open(file_path, 'rb') as f:
-        bytes_sent = 0
-        while bytes_sent < file_size:
-            chunk = f.read(1024)
-            client.send(chunk)
-            bytes_sent += len(chunk)
-            progress = (bytes_sent / file_size) * 100
-            print(f'[+] {file_name} - {progress:.2f}%')
+    with open(caminhoArquivo, 'rb') as arquivo:
+        bytesEnviados = 0 # quantidade de bytes enviados
+        while bytesEnviados < tamanhoArquivo:
+            dados = arquivo.read(1024) # lê 1024 bytes do conteúdo do arquivo
+            cliente.send(dados) # envia o pedaço de dados
+            bytesEnviados += len(dados)
+            progresso = (bytesEnviados / tamanhoArquivo) * 100 # progresso
+            print(f'{nomeArquivo} - {progresso:.2f}%')
 
-    print(f'[+] File {file_name} sent successfully')
+    print(f'Arquivo {nomeArquivo} enviado.')
 
-    client.close()
+    cliente.close() # encerra a conexão
 
 
 if __name__ == '__main__':
-    server_ip = '172.29.0.8'
-    server_port = 12345
-    file_path = 'teste.txt'  # Altere para o caminho do arquivo que deseja enviar
+    ipServer = '172.29.0.8'
+    portaServer = 12345
+    caminhoArquivo = 'teste.txt' # caminho do arquivo enviado
 
-    send_file(server_ip, server_port, file_path)
+    enviarArquivo(ipServer, portaServer, caminhoArquivo)
